@@ -94,12 +94,11 @@ module.exports = function(yargs, argv, convertOptions) {
 
 		var requireConfig = function requireConfig(configPath) {
 			var options = require(configPath);
-			var isES6DefaultExportedFunc = (
-				typeof options === "object" && options !== null && typeof options.default === "function"
-			);
-			if(typeof options === "function" || isES6DefaultExportedFunc) {
-				options = isES6DefaultExportedFunc ? options.default : options;
-				options = options(argv.env, argv);
+
+			if(Array.isArray(options)) {
+				options = options.map(prepareOptions);
+			} else {
+				options = prepareOptions(options);
 			}
 			return options;
 		};
@@ -119,6 +118,17 @@ module.exports = function(yargs, argv, convertOptions) {
 		return processConfiguredOptions(options);
 	}
 
+	function prepareOptions(options) {
+		var isES6DefaultExportedFunc = (
+			typeof options === "object" && options !== null && typeof options.default === "function"
+		);
+		if(typeof options === "function" || isES6DefaultExportedFunc) {
+			options = isES6DefaultExportedFunc ? options.default : options;
+			options = options(argv.env, argv);
+		}
+		return options;
+	}
+	
 	function processConfiguredOptions(options) {
 		if(options === null || typeof options !== "object") {
 			console.error("Config did not export an object or a function returning an object.");
